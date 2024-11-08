@@ -40,22 +40,9 @@ class MusicBot(commands.Cog):
                 print(f"Added {title} to the queue with URL: {url}") 
         if not ctx.voice_client.is_playing():
             await self.play_next(ctx)
+        self.reset_inactivity_timer(ctx)
 
-    async def play_next(self, ctx):
-        # if self.queue:
-        #     url, title = self.queue.pop(0)
-        #     print(f"Attempting to play {title} from {url}")  # Debugging statement
-        #     try:
-        #         source = await discord.FFmpegOpusAudio.from_probe(url, **FFMPEG_OPTIONS)
-        #         ctx.voice_client.play(source, after=lambda _: self.client.loop.create_task(self.play_next(ctx)))
-        #         await ctx.send(f"Now playing {title}")
-        #     except Exception as e:
-        #         print(f"Error playing {title}: {e}")  # Debugging statement
-        #         await ctx.send(f"Could not play {title}")
-        #         await self.play_next(ctx)
-        # else:
-        #     await ctx.send("Queue is empty")
-            
+    async def play_next(self, ctx):            
         if self.queue:
             url, title = self.queue.pop(0)
             source = await discord.FFmpegOpusAudio.from_probe(url, **FFMPEG_OPTIONS)
@@ -63,24 +50,28 @@ class MusicBot(commands.Cog):
             await ctx.send(f"Now playing {title}")
         elif not ctx.voice_client.is_playing():
             await ctx.send("Queue is empty") 
+        self.reset_inactivity_timer(ctx)
 
     @commands.command()
     async def skip(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.stop()
             await ctx.send("Skipped")
+        self.reset_inactivity_timer(ctx)
             
     @commands.command()
     async def pause(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.pause()
             await ctx.send("Paused")
+        self.reset_inactivity_timer(ctx)
     
     @commands.command()
     async def resume(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_paused():
             ctx.voice_client.resume()
             await ctx.send("Resumed")
+        self.reset_inactivity_timer(ctx)
 
     @commands.command()
     async def leave(self, ctx):
@@ -97,6 +88,6 @@ client = commands.Bot(command_prefix="!", intents=intents)
 
 async def main():
     await client.add_cog(MusicBot(client))
-    await client.start("TOKEN")
+    await client.start("DISCORD_TOKEN")
 
 asyncio.run(main())
